@@ -384,7 +384,7 @@ class SpyMemcachedIntegration(cf: ConnectionFactory, addrs: Seq[InetSocketAddres
         else if (op.isCancelled)
           Success(FailedResult(key, CancelledStatus))
         else
-          Success(FailedResult(key, TimedOutStatus))
+          Success(FailedResult(key, TimedOutStatus(None)))
       }
     }
 
@@ -403,7 +403,7 @@ class SpyMemcachedIntegration(cf: ConnectionFactory, addrs: Seq[InetSocketAddres
       }
 
       msg match {
-        case Success(FailedResult(_, TimedOutStatus)) =>
+        case Success(FailedResult(_, _: TimedOutStatus)) =>
           MemcachedConnection.opTimedOut(op)
           op.timeOut()
           if (!op.isCancelled) try op.cancel() catch {
@@ -424,8 +424,8 @@ class SpyMemcachedIntegration(cf: ConnectionFactory, addrs: Seq[InetSocketAddres
   protected final val statusTranslation: PartialFunction[OperationStatus, Status] = {
     case _: CancelledOperationStatus =>
       CancelledStatus
-    case _: TimedOutOperationStatus =>
-      TimedOutStatus
+    case spymemcachedTimeout: TimedOutOperationStatus =>
+      TimedOutStatus(Some(spymemcachedTimeout))
     case status: CASOperationStatus =>
       status.getCASResponse match {
         case CASResponse.EXISTS =>

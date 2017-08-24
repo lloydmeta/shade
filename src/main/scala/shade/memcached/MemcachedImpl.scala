@@ -160,7 +160,7 @@ class MemcachedImpl(config: Configuration, ec: ExecutionContext) extends Memcach
       val remainingTime = timeoutAt - System.currentTimeMillis()
 
       if (remainingTime <= 0)
-        throw new TimeoutException(key)
+        throw new TimeoutException(key, TimedOutStatus(None))
 
       instance.realAsyncGets(keyWithPrefix, remainingTime.millis) flatMap {
         case SuccessfulResult(_, None) =>
@@ -294,8 +294,8 @@ class MemcachedImpl(config: Configuration, ec: ExecutionContext) extends Memcach
     }
 
   private[this] def throwExceptionOn(failure: FailedResult) = failure match {
-    case FailedResult(k, TimedOutStatus) =>
-      throw new TimeoutException(withoutPrefix(k))
+    case FailedResult(k, t: TimedOutStatus) =>
+      throw new TimeoutException(withoutPrefix(k), t)
     case FailedResult(k, CancelledStatus) =>
       throw new CancelledException(withoutPrefix(k))
     case FailedResult(k, unhandled) =>
@@ -354,7 +354,7 @@ class MemcachedImpl(config: Configuration, ec: ExecutionContext) extends Memcach
 
       val withTimeout = config.operationTimeout match {
         case duration: FiniteDuration =>
-          builder.setOpTimeout(config.operationTimeout.toMillis)
+          builder.setOpTimeout(duration.toMillis)
         case _ =>
           builder
       }

@@ -11,6 +11,8 @@
 
 package shade
 
+import shade.memcached.internals.TimedOutStatus
+
 /**
  * Super-class for errors thrown when specific cache-store related
  * errors occur.
@@ -20,7 +22,7 @@ class CacheException(val msg: String) extends RuntimeException(msg)
 /**
  * Thrown in case a cache store related operation times out.
  */
-class TimeoutException(val key: String) extends CacheException(key)
+class TimeoutException(val key: String, status: TimedOutStatus) extends CacheException(key)
 
 /**
  * Thrown in case a cache store related operation is cancelled

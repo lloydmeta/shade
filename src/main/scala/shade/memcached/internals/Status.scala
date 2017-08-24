@@ -11,11 +11,11 @@
 
 package shade.memcached.internals
 
-import net.spy.memcached.ops.OperationStatus
+import net.spy.memcached.ops.{ OperationStatus, TimedOutOperationStatus }
+
 import scala.language.existentials
 
 sealed trait Status extends Product with Serializable
-case object TimedOutStatus extends Status
 case object CancelledStatus extends Status
 case object CASExistsStatus extends Status
 case object CASNotFoundStatus extends Status
@@ -24,6 +24,14 @@ case object CASObserveErrorInArgs extends Status
 case object CASObserveModified extends Status
 case object CASObserveTimeout extends Status
 case object IllegalCompleteStatus extends Status
+
+/**
+ * Represents a timed out operation
+ *
+ * @param underlying Holds Some of the underlying timed out status from SpyMemcached.
+ *                   If the timeout was not returned by the SpyMemcached layer, None.
+ */
+final case class TimedOutStatus(underlying: Option[TimedOutOperationStatus]) extends Status
 
 object UnhandledStatus {
 
